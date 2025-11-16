@@ -1,215 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SRT → Animated Video (GitHub Pages)</title>
-  <style>
-    body { font-family: Arial, sans-serif; background: #111; color: #eee; padding: 20px; }
-    #controls { margin-bottom: 20px; }
-    canvas { background: black; display: block; margin-bottom: 10px; }
-    select, input, button { margin: 6px 0; padding: 6px; }
-    #progressContainer { margin-top: 10px; }
-    #progressBar { width: 100%; height: 20px; background: #333; border-radius: 4px; overflow: hidden; }
-    #progressFill { width: 0%; height: 100%; background: #4caf50; }
-    #progressText { margin-top: 4px; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SRT → Animated Video (GitHub Pages)</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #111; color: #eee; padding: 20px; }
+  #controls { margin-bottom: 20px; }
+  canvas { background: black; display: block; margin-bottom: 10px; }
+  select, input, button { margin: 6px 0; padding: 6px; }
+  #progressContainer { margin-top: 10px; }
+  #progressBar { width: 100%; height: 20px; background: #333; border-radius: 4px; overflow: hidden; }
+  #progressFill { width: 0%; height: 100%; background: #4caf50; }
+  #progressText { margin-top: 4px; }
+</style>
 </head>
 <body>
-  <h2>SRT → Animated Text → MP4 (GitHub Pages)</h2>
-  <div id="controls">
-    <label>SRT File:</label><br />
-    <input type="file" id="srtFile" accept=".srt" /><br />
+<h2>SRT → Animated Text → MP4 (GitHub Pages)</h2>
+<div id="controls">
+  <label>SRT File:</label><br />
+  <input type="file" id="srtFile" accept=".srt" /><br />
 
-    <label>Animation Style:</label><br />
-    <select id="animationSelect">
-      <option value="fade">Fade In/Out</option>
-      <option value="slideUp">Slide Up</option>
-      <option value="slideDown">Slide Down</option>
-      <option value="slideLeft">Slide Left</option>
-      <option value="slideRight">Slide Right</option>
-      <option value="typing">Typewriter</option>
-      <option value="zoomIn">Zoom In</option>
-      <option value="zoomOut">Zoom Out</option>
-      <option value="bounce">Bounce</option>
-      <option value="scroll">Scroll Text</option>
-    </select><br />
+  <label>Animation Style:</label><br />
+  <select id="animationSelect">
+    <option value="fade">Fade In/Out</option>
+    <option value="slideUp">Slide Up</option>
+    <option value="slideDown">Slide Down</option>
+    <option value="slideLeft">Slide Left</option>
+    <option value="slideRight">Slide Right</option>
+    <option value="typing">Typewriter</option>
+    <option value="zoomIn">Zoom In</option>
+    <option value="zoomOut">Zoom Out</option>
+    <option value="bounce">Bounce</option>
+    <option value="scroll">Scroll Text</option>
+  </select><br />
 
-    <label>Text Position:</label><br />
-    <select id="textPosition">
-      <option value="top">Top</option>
-      <option value="middle" selected>Middle</option>
-      <option value="bottom">Bottom</option>
-    </select><br />
+  <label>Text Position:</label><br />
+  <select id="textPosition">
+    <option value="top">Top</option>
+    <option value="middle" selected>Middle</option>
+    <option value="bottom">Bottom</option>
+  </select><br />
 
-    <label>Font Size:</label><br />
-    <input type="number" id="fontSize" value="48" min="10" max="200" /><br />
+  <label>Font Size:</label><br />
+  <input type="number" id="fontSize" value="48" min="10" max="200" /><br />
 
-    <label>Text Color:</label><br />
-    <input type="color" id="textColor" value="#ffffff" /><br />
+  <label>Text Color:</label><br />
+  <input type="color" id="textColor" value="#ffffff" /><br />
 
-    <label>Resolution:</label><br />
-    <select id="resolutionSelect">
-      <option value="854x480">480p (854 × 480)</option>
-      <option value="1280x720" selected>720p (1280 × 720)</option>
-    </select><br />
+  <label>Resolution:</label><br />
+  <select id="resolutionSelect">
+    <option value="854x480">480p (854 × 480)</option>
+    <option value="1280x720" selected>720p (1280 × 720)</option>
+  </select><br />
 
-    <label>FPS:</label><br />
-    <input type="number" id="fpsInput" value="24" min="10" max="60" /><br />
+  <label>FPS:</label><br />
+  <input type="number" id="fpsInput" value="24" min="10" max="60" /><br />
 
-    <button id="renderBtn">Render to MP4</button>
+  <button id="renderBtn">Render to MP4</button>
 
-    <div id="progressContainer">
-      <div id="progressBar"><div id="progressFill"></div></div>
-      <div id="progressText">Progress: 0%</div>
-    </div>
+  <div id="progressContainer">
+    <div id="progressBar"><div id="progressFill"></div></div>
+    <div id="progressText">Progress: 0%</div>
   </div>
+</div>
 
-  <canvas id="c"></canvas>
+<canvas id="c"></canvas>
 
-  <!-- Fixed ffmpeg-core URLs for GitHub Pages -->
-  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
-  <script>
-    const { createFFmpeg, fetchFile } = FFmpeg;
-    const ffmpeg = createFFmpeg({
-      log: true,
-      corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.6/dist/ffmpeg-core.js',
-      wasmPath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.6/dist/ffmpeg-core.wasm',
-      workerPath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.11.6/dist/ffmpeg-core.worker.js',
-      threads: 1
-    });
+<!-- Fixed ffmpeg-core URLs for GitHub Pages (UMD) -->
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+<script>
+  const { createFFmpeg, fetchFile } = FFmpeg;
+  const ffmpeg = createFFmpeg({
+    log: true,
+    corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.js',
+    wasmPath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.wasm',
+    workerPath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.worker.js',
+    threads: 1
+  });
 
-    const canvas = document.getElementById('c');
-    const ctx = canvas.getContext('2d');
-    let subtitles = [];
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  let subtitles = [];
 
-    function setResolution() {
-      const res = document.getElementById('resolutionSelect').value.split('x');
-      canvas.width = parseInt(res[0]);
-      canvas.height = parseInt(res[1]);
+  function setResolution() {
+    const res = document.getElementById('resolutionSelect').value.split('x');
+    canvas.width = parseInt(res[0]);
+    canvas.height = parseInt(res[1]);
+  }
+  setResolution();
+  document.getElementById('resolutionSelect').addEventListener('change', setResolution);
+
+  document.getElementById('srtFile').addEventListener('change', async (e) => {
+    const text = await e.target.files[0].text();
+    subtitles = text.split(/\n\n+/).map(block => {
+      const lines = block.split(/\n/).filter(l => l.trim() !== '');
+      if (lines.length < 2) return null;
+      const times = lines[1].split(' --> ');
+      if (times.length < 2) return null;
+      return { start: toMs(times[0]), end: toMs(times[1]), text: lines.slice(2).join(' ') };
+    }).filter(Boolean);
+    alert('SRT loaded: ' + subtitles.length + ' lines');
+  });
+
+  function toMs(t) {
+    const [h, m, s] = t.split(':');
+    const [sec, ms] = s.split(',');
+    return (+h) * 3600000 + (+m) * 60000 + (+sec) * 1000 + (+ms);
+  }
+
+  function renderFrame(time) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const cue = subtitles.find(s => time >= s.start && time <= s.end);
+    if (!cue) return;
+    const anim = document.getElementById('animationSelect').value;
+    const pos = document.getElementById('textPosition').value;
+    const fontSize = parseInt(document.getElementById('fontSize').value);
+    const color = document.getElementById('textColor').value;
+    renderAnimatedText(cue.text, time - cue.start, cue.end - cue.start, anim, pos, fontSize, color);
+  }
+
+  function renderAnimatedText(text, elapsed, duration, style, position, fontSize, color) {
+    ctx.fillStyle = color;
+    ctx.textAlign = 'center';
+    ctx.font = fontSize + 'px Arial';
+    const progress = Math.min(1, elapsed / duration);
+    let x = canvas.width / 2, y;
+    switch (position) {
+      case 'top': y = fontSize + 20; break;
+      case 'middle': y = canvas.height / 2; break;
+      case 'bottom': y = canvas.height - 60; break;
     }
+    let alpha = 1, scale = 1, offset = 0;
+    switch (style) {
+      case 'fade': alpha = progress < 0.5 ? progress * 2 : (1 - progress) * 2; break;
+      case 'slideUp': offset = (1 - progress) * 150; break;
+      case 'slideDown': offset = -(1 - progress) * 150; break;
+      case 'slideLeft': ctx.textAlign = 'left'; x += (1 - progress) * 300; break;
+      case 'slideRight': ctx.textAlign = 'right'; x -= (1 - progress) * 300; break;
+      case 'zoomIn': scale = 0.5 + progress * 0.5; break;
+      case 'zoomOut': scale = 1.5 - progress * 0.5; break;
+      case 'bounce': offset = Math.sin(progress * 3 * Math.PI) * 30; break;
+      case 'scroll': offset = (progress * canvas.height) - canvas.height / 2; break;
+      case 'typing': text = text.substring(0, Math.floor(progress * text.length)); break;
+    }
+
+    const words = text.split(' ');
+    const maxWidth = canvas.width - 100;
+    const lineHeight = fontSize * 1.2;
+    let line = '', lines = [];
+    words.forEach(w => {
+      const testLine = line + w + ' ';
+      if (ctx.measureText(testLine).width > maxWidth) {
+        lines.push(line);
+        line = w + ' ';
+      } else { line = testLine; }
+    });
+    lines.push(line);
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(x, y + offset);
+    ctx.scale(scale, scale);
+    lines.forEach((l, i) => ctx.fillText(l, 0, i * lineHeight));
+    ctx.restore();
+  }
+
+  document.getElementById('renderBtn').onclick = async () => {
+    if (subtitles.length === 0) return;
+    const fps = parseInt(document.getElementById('fpsInput').value);
     setResolution();
-    document.getElementById('resolutionSelect').addEventListener('change', setResolution);
 
-    document.getElementById('srtFile').addEventListener('change', async (e) => {
-      const text = await e.target.files[0].text();
-      subtitles = text.split(/\n\n+/).map(block => {
-        const lines = block.split(/\n/).filter(l => l.trim() !== '');
-        if (lines.length < 2) return null;
-        const times = lines[1].split(' --> ');
-        if (times.length < 2) return null;
-        return { start: toMs(times[0]), end: toMs(times[1]), text: lines.slice(2).join(' ') };
-      }).filter(Boolean);
-      alert('SRT loaded: ' + subtitles.length + ' lines');
-    });
+    const frames = [];
+    const duration = subtitles[subtitles.length - 1].end;
+    const totalFrames = Math.ceil((duration / 1000) * fps);
 
-    function toMs(t) {
-      const [h, m, s] = t.split(':');
-      const [sec, ms] = s.split(',');
-      return (+h) * 3600000 + (+m) * 60000 + (+sec) * 1000 + (+ms);
+    for (let i = 0; i < totalFrames; i++) {
+      const time = i * (1000 / fps);
+      renderFrame(time);
+      const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+      const arr = new Uint8Array(await blob.arrayBuffer());
+      frames.push({ name: `frame${String(i).padStart(5,'0')}.png`, data: arr });
+
+      const pct = Math.floor((i / totalFrames) * 100);
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressText').textContent = 'Progress: ' + pct + '%';
     }
 
-    function renderFrame(time) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const cue = subtitles.find(s => time >= s.start && time <= s.end);
-      if (!cue) return;
-      const anim = document.getElementById('animationSelect').value;
-      const pos = document.getElementById('textPosition').value;
-      const fontSize = parseInt(document.getElementById('fontSize').value);
-      const color = document.getElementById('textColor').value;
-      renderAnimatedText(cue.text, time - cue.start, cue.end - cue.start, anim, pos, fontSize, color);
-    }
+    if (!ffmpeg.isLoaded()) await ffmpeg.load();
+    for (const f of frames) ffmpeg.FS('writeFile', f.name, f.data);
 
-    function renderAnimatedText(text, elapsed, duration, style, position, fontSize, color) {
-      ctx.fillStyle = color;
-      ctx.textAlign = 'center';
-      ctx.font = fontSize + 'px Arial';
-      const progress = Math.min(1, elapsed / duration);
-      let x = canvas.width / 2, y;
-      switch (position) {
-        case 'top': y = fontSize + 20; break;
-        case 'middle': y = canvas.height / 2; break;
-        case 'bottom': y = canvas.height - 60; break;
-      }
-      let alpha = 1, scale = 1, offset = 0;
-      switch (style) {
-        case 'fade': alpha = progress < 0.5 ? progress * 2 : (1 - progress) * 2; break;
-        case 'slideUp': offset = (1 - progress) * 150; break;
-        case 'slideDown': offset = -(1 - progress) * 150; break;
-        case 'slideLeft': ctx.textAlign = 'left'; x += (1 - progress) * 300; break;
-        case 'slideRight': ctx.textAlign = 'right'; x -= (1 - progress) * 300; break;
-        case 'zoomIn': scale = 0.5 + progress * 0.5; break;
-        case 'zoomOut': scale = 1.5 - progress * 0.5; break;
-        case 'bounce': offset = Math.sin(progress * 3 * Math.PI) * 30; break;
-        case 'scroll': offset = (progress * canvas.height) - canvas.height / 2; break;
-        case 'typing': text = text.substring(0, Math.floor(progress * text.length)); break;
-      }
+    await ffmpeg.run('-framerate', String(fps), '-i', 'frame%05d.png', '-c:v', 'libx264', '-pix_fmt', 'yuv420p', 'output.mp4');
 
-      const words = text.split(' ');
-      const maxWidth = canvas.width - 100;
-      const lineHeight = fontSize * 1.2;
-      let line = '', lines = [];
-      words.forEach(w => {
-        const testLine = line + w + ' ';
-        if (ctx.measureText(testLine).width > maxWidth) {
-          lines.push(line);
-          line = w + ' ';
-        } else {
-          line = testLine;
-        }
-      });
-      lines.push(line);
+    const data = ffmpeg.FS('readFile', 'output.mp4');
+    const url = URL.createObjectURL(new Blob([data.buffer], {type:'video/mp4'}));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'subtitle_video.mp4';
+    a.click();
 
-      ctx.save();
-      ctx.globalAlpha = alpha;
-      ctx.translate(x, y + offset);
-      ctx.scale(scale, scale);
-      lines.forEach((l, i) => ctx.fillText(l, 0, i * lineHeight));
-      ctx.restore();
-    }
-
-    document.getElementById('renderBtn').onclick = async () => {
-      if (subtitles.length === 0) return;
-      const fps = parseInt(document.getElementById('fpsInput').value);
-      setResolution();
-
-      const frames = [];
-      const duration = subtitles[subtitles.length - 1].end;
-      const totalFrames = Math.ceil((duration / 1000) * fps);
-
-      for (let i = 0; i < totalFrames; i++) {
-        const time = i * (1000 / fps);
-        renderFrame(time);
-        const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
-        const arr = new Uint8Array(await blob.arrayBuffer());
-        frames.push({ name: `frame${String(i).padStart(5, '0')}.png`, data: arr });
-
-        const pct = Math.floor((i / totalFrames) * 100);
-        document.getElementById('progressFill').style.width = pct + '%';
-        document.getElementById('progressText').textContent = 'Progress: ' + pct + '%';
-      }
-
-      if (!ffmpeg.isLoaded()) await ffmpeg.load();
-      for (const f of frames) ffmpeg.FS('writeFile', f.name, f.data);
-
-      await ffmpeg.run(
-        '-framerate', String(fps),
-        '-i', `frame%05d.png`,
-        '-c:v', 'libx264',
-        '-pix_fmt', 'yuv420p',
-        'output.mp4'
-      );
-
-      const data = ffmpeg.FS('readFile', 'output.mp4');
-      const url = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'subtitle_video.mp4';
-      a.click();
-
-      document.getElementById('progressFill').style.width = '100%';
-      document.getElementById('progressText').textContent = 'Progress: 100%';
-    };
-  </script>
+    document.getElementById('progressFill').style.width = '100%';
+    document.getElementById('progressText').textContent = 'Progress: 100%';
+  };
+</script>
 </body>
 </html>
